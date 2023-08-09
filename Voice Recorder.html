@@ -1,0 +1,119 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width">
+<script type="text/javascript" src='file:///android_asset/app.js'></script>
+</head>	
+<script type="text/javascript">
+function OnBack() {
+if(confirm("Exit App?")) {
+app.Exit();
+}
+}
+function OnStart() {
+if(!app.FolderExists( "/sdcard/HJCD studios" )) {app.MakeFolder( "/sdcard/HJCD studios" ); }
+if(!app.FolderExists( "/sdcard/HJCD studios/voice recorder" )) {app.MakeFolder( "/sdcard/HJCD studios/voice recorder" ); }
+app.EnableBackKey( false );
+
+recorder = app.CreateAudioRecorder();
+
+scan_records();
+}
+function scan_records() {
+document.getElementById("recordings").innerHTML="";
+
+var list = app.ListFolder( "/sdcard/HJCD studios/voice recorder/",".wav" );
+if (list != "") {
+for(var i = 0; i < list.length; i++) {
+var aaa = app.ReadFile( "look.txt" );
+var aab = aaa.replace("src_aud","src='file:///sdcard/HJCD studios/voice recorder/" + list[i] + "'");
+var aac = aab.replace("src_ops","src='Img/options.png';");
+var aad = aac.replace("ops","ops('" + list[i] + "');");
+var aae = aad.replace("name",list[i]);
+document.getElementById("recordings").innerHTML+=aae;
+}
+} else {
+document.getElementById("recordings").innerHTML="No recordings found!";
+}
+}
+var counted = 0;
+var count = false;
+var aaa = 0;
+function record(img) {
+aaa++;
+var fname = "Recording: " + Math.floor(Math.random() * 99999);
+if (aaa == 1) {
+count = true;
+img.src="Img/Recording.png";
+recorder.SetFile( "/sdcard/HJCD studios/voice recorder/" + fname + ".wav" );
+recorder.Start();
+counts();
+}
+if (aaa == 2) {
+count = false;
+img.src="Img/not_recording.png";
+recorder.Stop();
+app.ShowPopup( "Saved in url:/sdcard/HJCD studios/voice recorder/" + fname + ".wav","Bottom" );
+aaa = 0;
+setTimeout("scan_records();",130);
+}
+}
+var selected_aud = "";
+function ops(name) {
+selected_aud="/sdcard/HJCD studios/voice recorder/" + name;
+dlg = app.CreateListDialog( "Choose action","Rename,Delete" );
+dlg.SetOnTouch( dlg_OnTouch );
+dlg.Show();
+}
+function dlg_OnTouch(item) {
+if (item == "Delete") {
+if (confirm("Delete?")) {
+app.DeleteFile( selected_aud );
+app.ShowPopup( "Deleted","Bottom" );
+scan_records();
+}
+}
+if (item == "Rename") {
+var new_name = prompt("Enter New Name");
+if (new_name.length >= 1) {
+app.RenameFile( selected_aud,"/sdcard/HJCD studios/voice recorder/" + new_name + ".wav" );
+app.ShowPopup( "Renamed as: " + new_name,"Bottom" );
+scan_records();
+}
+}
+}
+function counts() {
+if (count) {
+counted++;
+document.getElementById("length").innerHTML=counted;
+setTimeout("counts();",1000);
+} else {
+counted = 0;
+document.getElementById("length").innerHTML="";
+}
+}
+function pause() {
+recorder.Pause();
+}
+</script>
+<style type="text/css">
+body {
+background-color: #ffffff;
+}
+#recordings {
+height: 80%;
+overflow: scroll;
+}
+</style>
+<body onload="app.Start()">
+<center>
+<div id="recordings">
+</div>
+<div id="record_new">
+<hr>
+<img src="Img/pause.png" width="100px" height="100px" onClick="Pause();">
+<img src="Img/not_recording.png" width="100px" height="100px" onClick="record(this);">
+<b style="color: blue" id="length"></b>
+</div>
+</center>
+</body>
+</html>
